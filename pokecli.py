@@ -99,7 +99,12 @@ def main():
 
 def init_config():
     parser = argparse.ArgumentParser()
+<<<<<<< HEAD
     config_file = "configs/config.json"
+=======
+    config_file = "config.json"
+    release_config_json = "release_config.json"
+>>>>>>> refs/remotes/origin/master
     web_dir = "web"
 
     # If config file exists, load variables from json
@@ -328,7 +333,46 @@ def init_config():
         parser.error("Needs either --use-location-cache or --location.")
         return None
 
+<<<<<<< HEAD
     # create web dir if not exists
+=======
+    if config.item_filter:
+        config.item_filter = [str(item_id) for item_id in config.item_filter.split(',')]
+
+    config.release_config = {}
+    if os.path.isfile(release_config_json):
+        with open(release_config_json) as data:
+            config.release_config.update(json.load(data))
+
+    # create web dir if not exists
+    try: 
+        os.makedirs(web_dir)
+    except OSError:
+        if not os.path.isdir(web_dir):
+            raise
+
+    if config.evolve_all:
+        config.evolve_all = [str(pokemon_name) for pokemon_name in config.evolve_all.split(',')]
+
+    return config
+
+
+def main():
+    # log settings
+    # log format
+    #logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(module)10s] [%(levelname)5s] %(message)s')
+
+    sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+    sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+
+    config = init_config()
+    if not config:
+        return
+
+    logger.log('[x] PokemonGO Bot v1.0', 'green')
+    logger.log('[x] Configuration initialized', 'yellow')
+
+>>>>>>> refs/remotes/origin/master
     try:
         os.makedirs(web_dir)
     except OSError:

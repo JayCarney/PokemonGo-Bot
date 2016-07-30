@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
+<<<<<<< HEAD
 import os
 import datetime
+=======
+import logging
+import googlemaps
+>>>>>>> refs/remotes/origin/master
 import json
 import logging
 import random
@@ -45,6 +50,7 @@ class PokemonGoBot(object):
         self.navigator = SpiralNavigator(self)
         random.seed()
 
+<<<<<<< HEAD
     def tick(self):
         self.cell = self.get_meta_cell()
 
@@ -177,6 +183,73 @@ class PokemonGoBot(object):
                     x['forts'][0]['longitude']) if x.get('forts', []) else 1e6
             )
         return map_cells
+=======
+    def take_step(self):
+        self.stepper.take_step()
+
+    def work_on_cell(self, cell, position, include_fort_on_path):
+        if self.config.evolve_all:
+            # Run evolve all once. Flip the bit.
+            print('[#] Attempting to evolve all pokemons ...')
+            worker = EvolveAllWorker(self)
+            worker.work()
+            self.config.evolve_all = []
+
+        self._filter_ignored_pokemons(cell)
+
+        if (self.config.mode == "all" or self.config.mode ==
+                "poke") and 'catchable_pokemons' in cell and len(cell[
+                    'catchable_pokemons']) > 0:
+            logger.log('[#] Something rustles nearby!')
+            # Sort all by distance from current pos- eventually this should
+            # build graph & A* it
+            cell['catchable_pokemons'].sort(
+                key=
+                lambda x: distance(self.position[0], self.position[1], x['latitude'], x['longitude']))
+
+            user_web_catchable = 'web/catchable-%s.json' % (self.config.username)
+            for pokemon in cell['catchable_pokemons']:
+                with open(user_web_catchable, 'w') as outfile:
+                    json.dump(pokemon, outfile)
+
+                if self.catch_pokemon(pokemon) == PokemonCatchWorker.NO_POKEBALLS:
+                    break
+                with open(user_web_catchable, 'w') as outfile:
+                    json.dump({}, outfile)
+
+        if (self.config.mode == "all" or self.config.mode == "poke"
+            ) and 'wild_pokemons' in cell and len(cell['wild_pokemons']) > 0:
+            # Sort all by distance from current pos- eventually this should
+            # build graph & A* it
+            cell['wild_pokemons'].sort(
+                key=
+                lambda x: distance(self.position[0], self.position[1], x['latitude'], x['longitude']))
+            for pokemon in cell['wild_pokemons']:
+                if self.catch_pokemon(pokemon) == PokemonCatchWorker.NO_POKEBALLS:
+                    break
+        if (self.config.mode == "all" or
+                self.config.mode == "farm") and include_fort_on_path:
+            if 'forts' in cell:
+                # Only include those with a lat/long
+                forts = [fort
+                         for fort in cell['forts']
+                         if 'latitude' in fort and 'type' in fort]
+                gyms = [gym for gym in cell['forts'] if 'gym_points' in gym]
+
+                # Sort all by distance from current pos- eventually this should
+                # build graph & A* it
+                forts.sort(key=lambda x: distance(self.position[
+                           0], self.position[1], x['latitude'], x['longitude']))
+                for fort in forts:
+                    worker = MoveToFortWorker(fort, self)
+                    worker.work()
+
+                    worker = SeenFortWorker(fort, self)
+                    hack_chain = worker.work()
+                    if hack_chain > 10:
+                        #print('need a rest')
+                        break
+>>>>>>> refs/remotes/origin/master
 
     def _setup_logging(self):
         self.log = logging.getLogger(__name__)
